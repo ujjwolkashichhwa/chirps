@@ -5,6 +5,7 @@ import { useForm, Head, usePage } from '@inertiajs/react';
 import { Inertia } from '@inertiajs/inertia';
 import PrimaryButton from '@/Components/PrimaryButton';
 import DraggableSort from '@/Components/DraggableSort';
+import InputField from '@/Components/InputField';
 
 export default function Index({ auth, subjects }) {
     const { data, setData, post, processing, reset, errors } = useForm({
@@ -38,7 +39,15 @@ export default function Index({ auth, subjects }) {
         <>
             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{subject.sort_order}</td>
             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{subject.name}</td>
-            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{subject.students.map(student => student.name).join(', ')}</td>
+            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <ul>
+                    {subject.students
+                    .sort((a, b) => a.sort_order - b.sort_order)
+                    .map((student, index) => (
+                        <li key={index}>{student.name}</li>
+                    ))}
+                </ul>    
+            </td>
             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                 <button 
                     onClick={() => handleEdit(subject)} 
@@ -63,8 +72,7 @@ export default function Index({ auth, subjects }) {
                 <div className="w-full sm:max-w-lg mt-6 px-6 py-4 bg-white shadow-md overflow-hidden sm:rounded-lg">
                     {flash && <div className="mb-4 text-green-600">{flash}</div>}
                     <form onSubmit={handleSubmit} className="mt-2">
-                        <input
-                            className="block w-full border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 rounded-md shadow-sm"
+                        <InputField
                             type="text"
                             value={data.subjectName}
                             onChange={(e) => setData('subjectName', e.target.value)}

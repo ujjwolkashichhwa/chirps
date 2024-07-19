@@ -4,10 +4,12 @@ import InputError from '@/Components/InputError';
 import { useForm, Head, usePage } from '@inertiajs/react';
 import { Inertia } from '@inertiajs/inertia';
 import PrimaryButton from '@/Components/PrimaryButton';
+import SelectField from '@/Components/SelectField';
 
-export default function Edit({auth, subject}) {
-    const { data, setData, post, processing, reset, errors } = useForm({
+export default function Edit({auth, subject, students}) {
+    const { data, setData, put, processing, reset, errors } = useForm({
        subjectName: subject ? subject.name : '',
+       studentId: subject.students.map(student => student.id) || [],
     });
 
     const { flash } = usePage().props;
@@ -15,7 +17,7 @@ export default function Edit({auth, subject}) {
     const handleSubmit = (e) => {
         e.preventDefault();
 
-        post(route('subjects.update'), {
+        put(route('subjects.update', { subject: subject.id }), {
             onSuccess: () => reset(),
         });
     };
@@ -35,6 +37,13 @@ export default function Edit({auth, subject}) {
                             placeholder="Subject Name"
                         />
                         <InputError message={errors.subjectName} className='mt-2' />
+
+                        <SelectField
+                            multiple={true}
+                            value={data.studentId}
+                            onChange={(e) => setData('studentId', [...e.target.selectedOptions].map(option => option.value))}  
+                            items={students}
+                        />
 
                         <PrimaryButton type="submit" className='mt-2 w-full text-center'>
                             Update Subject

@@ -7,7 +7,7 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import InputLabel from '@/Components/InputLabel';
 
 export default function Edit({ auth, subjects, student }) {
-    const { data, setData, post, put, processing, reset, errors } = useForm({
+    const { data, setData, put, processing, reset, errors } = useForm({
         studentName: student.name || '',
         subjectId: student.subjects.map(subject => subject.id) || [],
     });

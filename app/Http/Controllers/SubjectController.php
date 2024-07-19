@@ -17,7 +17,7 @@ class SubjectController extends Controller
     public function index()
     {
         return Inertia::render('Subjects/Index', [
-            'subjects' => Subject::with('students:id,id,name')->get(),
+            'subjects' => Subject::with('students:id,id,name,sort_order')->get(),
             'flash' => session('success'),
         ]);
     }
@@ -58,8 +58,8 @@ class SubjectController extends Controller
     public function edit(Subject $subject)
     {
         return Inertia::render('Subjects/Edit', [
-            'subject' => $subject->only(['id', 'name']),
-            
+            'subject' =>  $subject->load('students:id,id,name'), 
+            'students' => Student::all(['id', 'name']),
         ]);
     }
 
@@ -73,6 +73,8 @@ class SubjectController extends Controller
         $subject->update([
             'name' => $validated['subjectName'],
         ]);
+
+        $subject->students()->sync($validated['studentId']);
 
         return redirect()->route('subjects.index')->with('success', 'Subject updated Successfully');
     }

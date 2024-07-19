@@ -25,6 +25,7 @@ class SubjectRequest extends FormRequest
     {
         return [
             'subjectName' => 'required|string|max:255',
+            'studentId' => 'nullable|array',
         ];
     }
 

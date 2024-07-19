@@ -18,7 +18,7 @@ class StudentController extends Controller
     public function index()
     {   
         return Inertia::render('Students/Index', [
-            'students' => Student::with('subjects:id,id,name')->latest()->get(),
+            'students' => Student::with('subjects:id,id,name,sort_order')->latest()->get(),
             'subjects' => Subject::all(['id', 'name']),
             'flash' => session('success'),
         ]);

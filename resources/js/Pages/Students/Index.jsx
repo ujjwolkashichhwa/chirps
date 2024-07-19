@@ -5,6 +5,8 @@ import { useForm, Head, usePage } from '@inertiajs/react';
 import { Inertia } from '@inertiajs/inertia';
 import PrimaryButton from '@/Components/PrimaryButton';
 import DraggableSort from '@/Components/DraggableSort';
+import InputField from '@/Components/InputField';
+import SelectField from '@/Components/SelectField';
 
 export default function Index({auth, subjects, students}) {
     const { data, setData, post, processing, reset, errors } = useForm({
@@ -38,7 +40,15 @@ export default function Index({auth, subjects, students}) {
         <>
             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{student.sort_order}</td>
             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{student.name}</td>
-            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{student.subjects.map(subject => subject.name).join(', ')}</td>
+            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500"> 
+                <ul>
+                    {student.subjects
+                    .sort((a, b) => a.sort_order - b.sort_order)
+                    .map((subject, index) => (
+                        <li key={index}>{subject.name}</li>
+                    ))}
+                </ul>
+            </td>
             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                 <button 
                     onClick={() => handleEdit(student)} 
@@ -64,8 +74,7 @@ export default function Index({auth, subjects, students}) {
                 <div className="w-full sm:max-w-lg mt-6 px-6 py-4 bg-white shadow-md overflow-hidden sm:rounded-lg">
                     {flash && <div className="mb-4 text-green-600">{flash}</div>}
                     <form onSubmit={handleSubmit} className="mt-2">
-                        <input
-                            className="block w-full border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 rounded-md shadow-sm"
+                        <InputField
                             type="text"
                             value={data.studentName}
                             onChange={(e) => setData('studentName', e.target.value)}
@@ -73,13 +82,12 @@ export default function Index({auth, subjects, students}) {
                         />
                         <InputError message={errors.studentName} className='mt-2' />
 
-                        <select multiple value={data.subjectId}
-                                onChange={(e) => setData('subjectId', [...e.target.selectedOptions].map(option => option.value))}  
-                                className="mt-2 block w-full border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 rounded-md shadow-sm">
-                            {subjects.map(subject => (
-                                <option key={subject.id} value={subject.id}>{subject.name}</option>
-                            ))}
-                        </select>
+                        <SelectField
+                            multiple={true}
+                            value={data.subjectId}
+                            onChange={(e) => setData('subjectId', [...e.target.selectedOptions].map(option => option.value))}  
+                            items={subjects}
+                        />
                         <InputError message={errors.subjectId} className='mt-2' />
 
                         <PrimaryButton type="submit" className='mt-2 w-full text-center'  disabled={data.subjectId.length === 0}>
