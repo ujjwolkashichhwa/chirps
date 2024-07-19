@@ -10,12 +10,4 @@ export default defineConfig({
         }),
         react(),
     ],
-    optimizeDeps: {
-        include: ['array-move']
-    },
-    resolve: {
-        alias: {
-            'array-move': require.resolve('array-move')
-        }
-    }
 });
