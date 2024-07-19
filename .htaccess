@@ -1,0 +1,19 @@
+# Enable the rewrite engine
+RewriteEngine On
+
+# Handle React routing
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ /index.html [L,QSA]
+
+# Redirect root URL to http://localhost:<dynamic_port>/students
+RewriteCond %{HTTP_HOST} ^localhost(:[0-9]+)?$
+RewriteRule ^$ http://localhost:%{SERVER_PORT}/students [L,R=301]
+
+# Handle Laravel routing
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^ index.php [L]
+</IfModule>
