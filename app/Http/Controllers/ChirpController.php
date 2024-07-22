@@ -62,4 +62,22 @@ class ChirpController extends Controller
  
         return redirect(route('chirps.index'));
     }
+
+    /**
+     * update the sort_order according to the dragged position
+     */
+    public function updateSortOrder(Request $request)
+    {
+        $sortedChirps = $request->input('chirps');
+
+        foreach ($sortedChirps as $chirpData) {
+            $chirp = Chirp::find($chirpData['id']);
+            if ($chirp) {
+                $chirp->sort_order = $chirpData['sort_order'];
+                $chirp->save();
+            }
+        }
+
+        return redirect()->route('chirps.index');
+    }
 }

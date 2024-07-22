@@ -31,6 +31,10 @@ Route::resource('chirps', ChirpController::class)
     ->only(['index', 'store', 'update', 'destroy'])
     ->middleware(['auth', 'verified']);
 
+Route::post('/chirps/update-sort-order', [ChirpController::class, 'updateSortOrder'])
+    ->middleware(['auth', 'verified'])
+    ->name('chirps.updateSortOrder');
+
 Route::resource('students', StudentController::class)
     ->only(['index', 'store', 'update', 'destroy'])
     ->middleware(['auth', 'verified']);

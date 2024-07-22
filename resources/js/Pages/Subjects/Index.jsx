@@ -98,6 +98,7 @@ export default function Index({ auth, subjects }) {
                                 <DraggableSort 
                                     items={subjects} 
                                     renderItem={renderSubjectRow} 
+                                    type="table"
                                     onSortEnd={(newSortedSubjects) => {
                                         handleUpdateSortOrder(newSortedSubjects);
                                     }} 

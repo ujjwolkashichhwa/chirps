@@ -4,6 +4,8 @@ import Chirp from '@/Components/Chirp';
 import InputError from '@/Components/InputError';
 import PrimaryButton from '@/Components/PrimaryButton';
 import { useForm, Head } from '@inertiajs/react';
+import { Inertia } from '@inertiajs/inertia';
+import DraggableSort from '@/Components/DraggableSort';
  
 export default function Index({ auth, chirps }) {
     const { data, setData, post, processing, reset, errors } = useForm({
@@ -15,7 +17,15 @@ export default function Index({ auth, chirps }) {
 
         post(route('chirps.store'), { onSuccess: () => reset() });
     };
- 
+
+    const handleUpdateSortOrder = (sortedChirps) => {
+        Inertia.post(route('chirps.updateSortOrder'), { chirps: sortedChirps });
+    }
+
+    const renderItem = (chirp) =>( 
+        <Chirp key={chirp.id} chirp={chirp} />
+    );
+
     return (
         <AuthenticatedLayout user={auth.user}>
             <Head title="Chirps" />
@@ -32,11 +42,14 @@ export default function Index({ auth, chirps }) {
                     <PrimaryButton className="mt-4" disabled={processing}>Chirp</PrimaryButton>
                 </form>
 
-                <div className="mt-6 bg-white shadow-sm rounded-lg divide-y">
-                    {chirps.map(chirp =>
-                        <Chirp key={chirp.id} chirp={chirp} />
-                    )}
-                </div>
+                <DraggableSort 
+                    items={chirps}
+                    renderItem={renderItem}
+                    type="container"
+                    onSortEnd={(newSortedItems) =>{
+                        handleUpdateSortOrder(newSortedItems);
+                    }}
+                />
             </div>
         </AuthenticatedLayout>
     );

@@ -5,19 +5,33 @@ const SortableItem = SortableElement(({ children }) => (
     <tr>{children}</tr>
 ));
 
-const SortableList = SortableContainer(({ items, renderItem }) => {
+const SortableDivItem = SortableElement(({ children }) => (
+    <>{children}</>
+));
+
+const SortableList = SortableContainer(({ items, renderItem, type }) => {
     return (
-        <tbody className="bg-white divide-y divide-gray-200">
-            {items?.map((item, index) => (
-                <SortableItem key={`item-${item.id}`} index={index}>
-                    {renderItem(item)}
-                </SortableItem>
-            ))}
-        </tbody>
+        type === "table" ? (
+            <tbody className="bg-white divide-y divide-gray-200">
+                {items?.map((item, index) => (
+                    <SortableItem key={`item-${item.id}`} index={index}>
+                        {renderItem(item)}
+                    </SortableItem>
+                ))}
+            </tbody>
+        ): (
+            <div className="mt-6 bg-white shadow-sm rounded-lg divide-y">
+                {items?.map((item, index) => (
+                    <SortableDivItem key={`item-${item.id}`} index={index}>
+                        {renderItem(item)}
+                    </SortableDivItem>
+                ))}
+            </div>
+        )
     );
 });
 
-export default function DraggableSort({ items, renderItem, onSortEnd }) {
+export default function DraggableSort({ items, renderItem, type, onSortEnd}) {
     const [sortedItems, setSortedItems] = useState();
 
     useEffect(()=>{
@@ -44,6 +58,7 @@ export default function DraggableSort({ items, renderItem, onSortEnd }) {
             items={sortedItems}
             renderItem={renderItem}
             onSortEnd={handleSortEnd}
+            type={type}
             lockAxis="y"
         />
     );
