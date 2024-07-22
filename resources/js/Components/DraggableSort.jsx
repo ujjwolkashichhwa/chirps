@@ -42,6 +42,14 @@ export default function DraggableSort({ items, renderItem, container, className,
         }
     };
 
+    const shouldCancelStart = (e) => {
+        // Prevent drag if the target element or any of its parents have the 'no-drag' class
+        if (e.target.closest('.no-drag')) {
+            return true;
+        }
+        return false;
+    };
+
     return (
         <SortableList
             items={sortedItems}
@@ -51,6 +59,7 @@ export default function DraggableSort({ items, renderItem, container, className,
             className={className}
             childContainer={childContainer}
             lockAxis="y"
+            shouldCancelStart={shouldCancelStart}
             {...props}
         />
     );

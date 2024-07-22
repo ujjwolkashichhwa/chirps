@@ -52,14 +52,14 @@ export default function Index({auth, subjects, students}) {
             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                 <button 
                     onClick={() => handleEdit(student)} 
-                    className="text-blue-600 hover:text-blue-900 mr-2"
+                    className="text-blue-600 hover:text-blue-900 mr-2 no-drag"
                 >
                     Edit
                 </button>
 
                 <button 
                     onClick={() => handleDelete(student.id)} 
-                    className="text-red-600 hover:text-red-900"
+                    className="text-red-600 hover:text-red-900 no-drag"
                 >
                     Delete
                 </button>
