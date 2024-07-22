@@ -108,7 +108,9 @@ export default function Index({auth, subjects, students}) {
                                 <DraggableSort
                                     items={students}
                                     renderItem={renderStudentRow}
-                                    type="table"
+                                    container="tbody"
+                                    className="bg-white divide-y divide-gray-200"
+                                    childContainer="tr"
                                     onSortEnd={(newSortedItems)=> {
                                         handleUpdateSortOrder(newSortedItems);
                                     }}

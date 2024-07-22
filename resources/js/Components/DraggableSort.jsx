@@ -1,41 +1,30 @@
 import React, { useState, useEffect } from 'react';
 import { SortableContainer, SortableElement, arrayMove } from 'react-sortable-hoc';
 
-const SortableItem = SortableElement(({ children }) => (
-    <tr>{children}</tr>
+const SortableItem = SortableElement(({children, childContainer: ChildContainer, ...props }) => (
+    ChildContainer ? (
+        <ChildContainer {...props}>{children}</ChildContainer>
+    ) : (
+        <>{children}</>
+    )
 ));
 
-const SortableDivItem = SortableElement(({ children }) => (
-    <>{children}</>
-));
-
-const SortableList = SortableContainer(({ items, renderItem, type }) => {
+const SortableList = SortableContainer(({ items, renderItem, container: Container, childContainer, ...props }) => {
     return (
-        type === "table" ? (
-            <tbody className="bg-white divide-y divide-gray-200">
-                {items?.map((item, index) => (
-                    <SortableItem key={`item-${item.id}`} index={index}>
-                        {renderItem(item)}
-                    </SortableItem>
-                ))}
-            </tbody>
-        ): (
-            <div className="mt-6 bg-white shadow-sm rounded-lg divide-y">
-                {items?.map((item, index) => (
-                    <SortableDivItem key={`item-${item.id}`} index={index}>
-                        {renderItem(item)}
-                    </SortableDivItem>
-                ))}
-            </div>
-        )
+        <Container {...props}>
+            {items?.map((item, index) => (
+                <SortableItem key={`item-${item.id}`} index={index} childContainer={childContainer}>
+                    {renderItem(item)}
+                </SortableItem>
+            ))}
+        </Container>
     );
 });
 
-export default function DraggableSort({ items, renderItem, type, onSortEnd}) {
+export default function DraggableSort({ items, renderItem, container, className, childContainer, onSortEnd, ...props }) {
     const [sortedItems, setSortedItems] = useState();
 
-    useEffect(()=>{
-        // Sort items by sort_order before setting to state
+    useEffect(() => {
         const sorted = [...items].sort((a, b) => a.sort_order - b.sort_order);
         setSortedItems(sorted);
     }, [items]);
@@ -58,8 +47,11 @@ export default function DraggableSort({ items, renderItem, type, onSortEnd}) {
             items={sortedItems}
             renderItem={renderItem}
             onSortEnd={handleSortEnd}
-            type={type}
+            container={container}
+            className={className}
+            childContainer={childContainer}
             lockAxis="y"
+            {...props}
         />
     );
 }

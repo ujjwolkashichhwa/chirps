@@ -45,7 +45,8 @@ export default function Index({ auth, chirps }) {
                 <DraggableSort 
                     items={chirps}
                     renderItem={renderItem}
-                    type="container"
+                    container="div"
+                    className="mt-6 bg-white shadow-sm rounded-lg divide-y"
                     onSortEnd={(newSortedItems) =>{
                         handleUpdateSortOrder(newSortedItems);
                     }}
