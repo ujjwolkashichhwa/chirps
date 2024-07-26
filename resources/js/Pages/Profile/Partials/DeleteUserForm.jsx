@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import DangerButton from '@/Components/DangerButton';
 import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
@@ -6,8 +6,9 @@ import Modal from '@/Components/Modal';
 import SecondaryButton from '@/Components/SecondaryButton';
 import TextInput from '@/Components/TextInput';
 import { useForm } from '@inertiajs/react';
+import Recaptcha from '@/Components/Recaptcha';
 
-export default function DeleteUserForm({ className = '' }) {
+export default function DeleteUserForm({ className = '',  recaptchaSiteKey }) {
     const [confirmingUserDeletion, setConfirmingUserDeletion] = useState(false);
     const passwordInput = useRef();
 
@@ -22,20 +23,24 @@ export default function DeleteUserForm({ className = '' }) {
         password: '',
     });
 
+    const [shouldSubmit, setShouldSubmit] = useState(false);
+
     const confirmUserDeletion = () => {
         setConfirmingUserDeletion(true);
     };
 
-    const deleteUser = (e) => {
-        e.preventDefault();
+    useEffect(() => {
+        if(shouldSubmit && data.recaptcha) {
+            destroy(route('profile.destroy'), {
+                preserveScroll: true,
+                onSuccess: () => closeModal(),
+                onError: () => passwordInput.current.focus(),
+                onFinish: () => reset(),
+            });
 
-        destroy(route('profile.destroy'), {
-            preserveScroll: true,
-            onSuccess: () => closeModal(),
-            onError: () => passwordInput.current.focus(),
-            onFinish: () => reset(),
-        });
-    };
+            setShouldSubmit(false);
+        }
+    }, [shouldSubmit, data.recaptcha]);
 
     const closeModal = () => {
         setConfirmingUserDeletion(false);
@@ -57,7 +62,15 @@ export default function DeleteUserForm({ className = '' }) {
             <DangerButton onClick={confirmUserDeletion} className='no-drag'>Delete Account</DangerButton>
 
             <Modal show={confirmingUserDeletion} onClose={closeModal}>
-                <form onSubmit={deleteUser} className="p-6">
+                <Recaptcha
+                    recaptchaSiteKey={recaptchaSiteKey}
+                    route='profile'
+                    setShouldSubmit={setShouldSubmit}
+                    className="p-6"
+                    onSubmit={(token) => {
+                        setData('recaptcha', token)
+                    }}
+                >
                     <h2 className="text-lg font-medium text-gray-900">
                         Are you sure you want to delete your account?
                     </h2>
@@ -92,7 +105,7 @@ export default function DeleteUserForm({ className = '' }) {
                             Delete Account
                         </DangerButton>
                     </div>
-                </form>
+                </Recaptcha>
             </Modal>
         </section>
     );
