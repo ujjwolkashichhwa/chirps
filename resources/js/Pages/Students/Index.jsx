@@ -81,8 +81,8 @@ export default function Index({auth, subjects, students, recaptchaSiteKey}) {
                     {/* <form onSubmit={handleSubmit} className="mt-2"> */}
                     <Recaptcha
                         recaptchaSiteKey={recaptchaSiteKey}
-                        route='students.store'
-                        setShouldSubmit={shouldSubmit}
+                        route='students'
+                        setShouldSubmit={setShouldSubmit}
                         className="mt-2"
                         onSubmit={(token) => {
                             setData('recaptcha', token)

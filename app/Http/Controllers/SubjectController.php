@@ -16,9 +16,12 @@ class SubjectController extends Controller
      */
     public function index()
     {
+        $recaptchaSiteKey = config('app.recapta_site_key');
+
         return Inertia::render('Subjects/Index', [
             'subjects' => Subject::with('students:id,id,name,sort_order')->get(),
             'flash' => session('success'),
+            'recaptchaSiteKey' => $recaptchaSiteKey
         ]);
     }
 
@@ -57,9 +60,12 @@ class SubjectController extends Controller
      */
     public function edit(Subject $subject)
     {
+        $recaptchaSiteKey = config('app.recapta_site_key');
+
         return Inertia::render('Subjects/Edit', [
             'subject' =>  $subject->load('students:id,id,name'), 
             'students' => Student::all(['id', 'name']),
+            'recaptchaSiteKey' => $recaptchaSiteKey
         ]);
     }
 

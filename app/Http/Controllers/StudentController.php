@@ -56,9 +56,12 @@ class StudentController extends Controller
      */
     public function edit(Student $student)
     {
+        $recaptchaSiteKey = config('app.recapta_site_key');
+        
         return Inertia::render('Students/Edit', [
             'student' => $student->load('subjects:id,id,name'), 
             'subjects' => Subject::all(['id', 'name']),
+            'recaptchaSiteKey' => $recaptchaSiteKey
         ]);
     } 
 
