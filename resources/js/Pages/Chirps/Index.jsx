@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Chirp from '@/Components/Chirp';
 import InputError from '@/Components/InputError';
@@ -6,17 +6,23 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import { useForm, Head } from '@inertiajs/react';
 import { Inertia } from '@inertiajs/inertia';
 import DraggableSort from '@/Components/DraggableSort';
+import Recaptcha from '@/Components/Recaptcha';
  
-export default function Index({ auth, chirps }) {
+export default function Index({ auth, chirps, recaptchaSiteKey }) {
     const { data, setData, post, processing, reset, errors } = useForm({
         message: '',
+        recaptcha: ''
     });
  
-    const submit = (e) => {
-        e.preventDefault();
+    const [shouldSubmit, setShouldSubmit] = useState(false);
 
-        post(route('chirps.store'), { onSuccess: () => reset() });
-    };
+    useEffect(() => {
+        if(shouldSubmit && data.recaptcha) {
+            post(route('chirps.store'), { onSuccess: () => reset() });
+
+            setShouldSubmit(false);
+        }
+    }, [shouldSubmit, data.recaptcha]);
 
     const handleUpdateSortOrder = (sortedChirps) => {
         Inertia.post(route('chirps.updateSortOrder'), { chirps: sortedChirps });
@@ -31,7 +37,15 @@ export default function Index({ auth, chirps }) {
             <Head title="Chirps" />
  
             <div className="max-w-2xl mx-auto p-4 sm:p-6 lg:p-8">
-                <form onSubmit={submit}>
+                    <Recaptcha
+                        recaptchaSiteKey={recaptchaSiteKey}
+                        route='chirps'
+                        setShouldSubmit={setShouldSubmit}
+                        className="mt-2"
+                        onSubmit={(token) => {
+                            setData('recaptcha', token)
+                        }}
+                     >
                     <textarea
                         value={data.message}
                         placeholder="What's on your mind?"
@@ -40,7 +54,7 @@ export default function Index({ auth, chirps }) {
                     ></textarea>
                     <InputError message={errors.message} className="mt-2" />
                     <PrimaryButton className="mt-4" disabled={processing}>Chirp</PrimaryButton>
-                </form>
+                </Recaptcha>
 
                 <DraggableSort 
                     items={chirps}

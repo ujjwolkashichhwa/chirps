@@ -9,7 +9,7 @@ import InputField from '@/Components/InputField';
 import SelectField from '@/Components/SelectField';
 import Recaptcha from '@/Components/Recaptcha';
 
-export default function Index({auth, subjects, students, recaptchaSiteKey}) {
+export default function Index({auth, subjects, students, recaptchaSiteKey }) {
     const { data, setData, post, processing, reset, errors } = useForm({
         studentName: '',
         subjectId: [],

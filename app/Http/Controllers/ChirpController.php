@@ -17,12 +17,14 @@ class ChirpController extends Controller
     public function index(Request $request): Response
     {
         $user = $request->user();
+        $recaptchaSiteKey = config('app.recapta_site_key');
 
         return Inertia::render('Chirps/Index', [
             'chirps' => Chirp::with('user:id,name')
                 ->where('user_id', $user->id)
                 ->latest()
                 ->get(),
+            'recaptchaSiteKey' => $recaptchaSiteKey
         ]);
     }
     /**
