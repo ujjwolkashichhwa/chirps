@@ -28,9 +28,12 @@ const RecaptchaContainer = ({children, ...props}) => {
     }
 
     return (
+        setShouldSubmit ?
         <form onSubmit={handleSubmit} {...restProps}>
             {children}
         </form>
+        :
+        <>{children}</>
     );
 }
 

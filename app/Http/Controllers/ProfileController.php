@@ -18,9 +18,12 @@ class ProfileController extends Controller
      */
     public function edit(Request $request): Response
     {
+        $recaptchaSiteKey = config('app.recapta_site_key');
+
         return Inertia::render('Profile/Edit', [
             'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
             'status' => session('status'),
+            'recaptchaSiteKey' => $recaptchaSiteKey
         ]);
     }
 

@@ -1,23 +1,30 @@
+import React, { useEffect, useState} from 'react';
 import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
 import { Link, useForm, usePage } from '@inertiajs/react';
 import { Transition } from '@headlessui/react';
+import Recaptcha from '@/Components/Recaptcha';
 
-export default function UpdateProfileInformation({ mustVerifyEmail, status, className = '' }) {
+export default function UpdateProfileInformation({ mustVerifyEmail, status, className = '', recaptchaSiteKey }) {
     const user = usePage().props.auth.user;
 
     const { data, setData, patch, errors, processing, recentlySuccessful } = useForm({
         name: user.name,
         email: user.email,
+        recaptcha: ''
     });
 
-    const submit = (e) => {
-        e.preventDefault();
+    const [shouldSubmit, setShouldSubmit] = useState(false);
 
-        patch(route('profile.update'));
-    };
+    useEffect(() => {
+        if(shouldSubmit && data.recaptcha) {
+            patch(route('profile.update'));
+
+            setShouldSubmit(false);
+        }
+    }, [shouldSubmit, data.recaptcha]);
 
     return (
         <section className={className}>
@@ -29,7 +36,15 @@ export default function UpdateProfileInformation({ mustVerifyEmail, status, clas
                 </p>
             </header>
 
-            <form onSubmit={submit} className="mt-6 space-y-6">
+            <Recaptcha
+                recaptchaSiteKey={recaptchaSiteKey}
+                route='profile'
+                setShouldSubmit={setShouldSubmit}
+                className="mt-6 space-y-6"
+                onSubmit={(token) => {
+                    setData('recaptcha', token)
+                }}
+                >
                 <div>
                     <InputLabel htmlFor="name" value="Name" />
 
@@ -97,7 +112,7 @@ export default function UpdateProfileInformation({ mustVerifyEmail, status, clas
                         <p className="text-sm text-gray-600">Saved.</p>
                     </Transition>
                 </div>
-            </form>
+            </Recaptcha>
         </section>
     );
 }
