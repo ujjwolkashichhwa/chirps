@@ -23,6 +23,7 @@
         "@inertiajs/inertia": "^0.11.1",
         "array-move": "^4.0.0",
         "dayjs": "^1.11.11",
+        "react-google-recaptcha-v3": "^1.10.1",
         "react-sortable-hoc": "^2.0.0"
     }
 }

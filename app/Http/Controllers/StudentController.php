@@ -17,10 +17,13 @@ class StudentController extends Controller
      */
     public function index()
     {   
+        $recaptchaSiteKey = config('app.recapta_site_key');
+        
         return Inertia::render('Students/Index', [
             'students' => Student::with('subjects:id,id,name,sort_order')->latest()->get(),
             'subjects' => Subject::all(['id', 'name']),
             'flash' => session('success'),
+            'recaptchaSiteKey' => $recaptchaSiteKey
         ]);
     }
     /**
