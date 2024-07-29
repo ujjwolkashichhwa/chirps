@@ -6,6 +6,7 @@ use App\Models\Subject;
 use App\Models\Student;
 use App\Http\Requests\SubjectRequest;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -16,9 +17,12 @@ class SubjectController extends Controller
      */
     public function index()
     {
+        $recaptchaSiteKey = config('app.recapta_site_key');
+
         return Inertia::render('Subjects/Index', [
             'subjects' => Subject::with('students:id,id,name,sort_order')->get(),
             'flash' => session('success'),
+            'recaptchaSiteKey' => $recaptchaSiteKey
         ]);
     }
 
@@ -35,13 +39,19 @@ class SubjectController extends Controller
      */
     public function store(SubjectRequest $request)
     {
-        $validated = $request->validated();
+        $recaptchaData = $this->validateRecaptcha($request);
 
-        Subject::create([
-            'name' => $validated['subjectName']
-        ]);
+        if (!$recaptchaData['success']) {
+            return back()->withErrors(['recaptcha' => 'reCAPTCHA verification failed.']);
+        } else {
+            $validated = $request->validated();
 
-        return redirect()->route('subjects.index')->with('success', 'Subject Created Successfully');
+            Subject::create([
+                'name' => $validated['subjectName']
+            ]);
+
+            return redirect()->route('subjects.index')->with('success', 'Subject Created Successfully');
+        }
     }
 
     /**
@@ -57,9 +67,12 @@ class SubjectController extends Controller
      */
     public function edit(Subject $subject)
     {
+        $recaptchaSiteKey = config('app.recapta_site_key');
+
         return Inertia::render('Subjects/Edit', [
             'subject' =>  $subject->load('students:id,id,name'), 
             'students' => Student::all(['id', 'name']),
+            'recaptchaSiteKey' => $recaptchaSiteKey
         ]);
     }
 
@@ -68,15 +81,21 @@ class SubjectController extends Controller
      */
     public function update(SubjectRequest $request, Subject $subject)
     {
-        $validated = $request->validated();
+        $recaptchaData = $this->validateRecaptcha($request);
 
-        $subject->update([
-            'name' => $validated['subjectName'],
-        ]);
+        if (!$recaptchaData['success']) {
+            return back()->withErrors(['recaptcha' => 'reCAPTCHA verification failed.']);
+        } else {
+            $validated = $request->validated();
 
-        $subject->students()->sync($validated['studentId']);
+            $subject->update([
+                'name' => $validated['subjectName'],
+            ]);
 
-        return redirect()->route('subjects.index')->with('success', 'Subject updated Successfully');
+            $subject->students()->sync($validated['studentId']);
+
+            return redirect()->route('subjects.index')->with('success', 'Subject updated Successfully');
+        }
     }
 
     /**
@@ -104,5 +123,19 @@ class SubjectController extends Controller
         }
 
         return redirect()->route('subjects.index');
+    }
+
+    /**!
+     * check the validation of recaptcha
+     */
+    private function validateRecaptcha($request) {
+        $recaptchaResponse = Http::asForm()->post('https://www.google.com/recaptcha/api/siteverify', [
+            'secret' => config('app.recapta_secret_key'),
+            'response' => $request->recaptcha,
+        ]);
+
+        $recaptchaData = $recaptchaResponse->json();
+
+        return $recaptchaData;
     }
 }

@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
+use Illuminate\Support\Facades\Http;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -20,7 +21,10 @@ class RegisteredUserController extends Controller
      */
     public function create(): Response
     {
-        return Inertia::render('Auth/Register');
+        $recaptchaSiteKey = config('app.recapta_site_key');
+        return Inertia::render('Auth/Register', [
+            'recaptchaSiteKey' => $recaptchaSiteKey,
+        ]);
     }
 
     /**
@@ -30,22 +34,43 @@ class RegisteredUserController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|lowercase|email|max:255|unique:'.User::class,
-            'password' => ['required', 'confirmed', Rules\Password::defaults()],
+        $recaptchaData = $this->validateRecaptcha($request);
+
+        if (!$recaptchaData['success']) {
+            return back()->withErrors(['recaptcha' => 'reCAPTCHA verification failed.']);
+        } else {
+            $request->validate([
+                'name' => 'required|string|max:255',
+                'email' => 'required|string|lowercase|email|max:255|unique:'.User::class,
+                'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            ]);
+    
+            $user = User::create([
+                'name' => $request->name,
+                'email' => $request->email,
+                'password' => Hash::make($request->password),
+            ]);
+    
+            event(new Registered($user));
+    
+            Auth::login($user);
+    
+            return redirect(route('dashboard', absolute: false));
+        }
+        
+    }
+    
+    /**
+     * check the validation of recaptcha
+     */
+    private function validateRecaptcha($request) {
+        $recaptchaResponse = Http::asForm()->post('https://www.google.com/recaptcha/api/siteverify', [
+            'secret' => config('app.recapta_secret_key'),
+            'response' => $request->recaptcha,
         ]);
 
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-        ]);
+        $recaptchaData = $recaptchaResponse->json();
 
-        event(new Registered($user));
-
-        Auth::login($user);
-
-        return redirect(route('dashboard', absolute: false));
+        return $recaptchaData;
     }
 }

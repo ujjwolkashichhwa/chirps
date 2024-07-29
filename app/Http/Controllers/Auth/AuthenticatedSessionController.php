@@ -8,6 +8,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Http;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -18,9 +19,11 @@ class AuthenticatedSessionController extends Controller
      */
     public function create(): Response
     {
+        $recaptchaSiteKey = config('app.recapta_site_key');
         return Inertia::render('Auth/Login', [
             'canResetPassword' => Route::has('password.request'),
             'status' => session('status'),
+            'recaptchaSiteKey' => $recaptchaSiteKey,
         ]);
     }
 
@@ -29,11 +32,17 @@ class AuthenticatedSessionController extends Controller
      */
     public function store(LoginRequest $request): RedirectResponse
     {
-        $request->authenticate();
+        $recaptchaData = $this->validateRecaptcha($request);
 
-        $request->session()->regenerate();
-
-        return redirect()->intended(route('dashboard', absolute: false));
+        if (!$recaptchaData['success']) {
+            return back()->withErrors(['recaptcha' => 'reCAPTCHA verification failed.']);
+        } else {
+            $request->authenticate();
+    
+            $request->session()->regenerate();
+    
+            return redirect()->intended(route('dashboard', absolute: false));
+        }
     }
 
     /**
@@ -48,5 +57,16 @@ class AuthenticatedSessionController extends Controller
         $request->session()->regenerateToken();
 
         return redirect('/');
+    }
+
+    private function validateRecaptcha($request) {
+        $recaptchaResponse = Http::asForm()->post('https://www.google.com/recaptcha/api/siteverify', [
+            'secret' => config('app.recapta_secret_key'),
+            'response' => $request->recaptcha,
+        ]);
+
+        $recaptchaData = $recaptchaResponse->json();
+
+        return $recaptchaData;
     }
 }

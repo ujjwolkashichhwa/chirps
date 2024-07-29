@@ -1,12 +1,13 @@
-import { useRef } from 'react';
+import { useRef , useEffect, useState} from 'react';
 import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
 import { useForm } from '@inertiajs/react';
 import { Transition } from '@headlessui/react';
+import Recaptcha from '@/Components/Recaptcha';
 
-export default function UpdatePasswordForm({ className = '' }) {
+export default function UpdatePasswordForm({ className = '', recaptchaSiteKey }) {
     const passwordInput = useRef();
     const currentPasswordInput = useRef();
 
@@ -14,27 +15,32 @@ export default function UpdatePasswordForm({ className = '' }) {
         current_password: '',
         password: '',
         password_confirmation: '',
+        recaptcha: ''
     });
 
-    const updatePassword = (e) => {
-        e.preventDefault();
+    const [shouldSubmit, setShouldSubmit] = useState(false);
 
-        put(route('password.update'), {
-            preserveScroll: true,
-            onSuccess: () => reset(),
-            onError: (errors) => {
-                if (errors.password) {
-                    reset('password', 'password_confirmation');
-                    passwordInput.current.focus();
-                }
+    useEffect(() => {
+        if(shouldSubmit && data.recaptcha) {
+            put(route('password.update'), {
+                preserveScroll: true,
+                onSuccess: () => reset(),
+                onError: (errors) => {
+                    if (errors.password) {
+                        reset('password', 'password_confirmation');
+                        passwordInput.current.focus();
+                    }
+    
+                    if (errors.current_password) {
+                        reset('current_password');
+                        currentPasswordInput.current.focus();
+                    }
+                },
+            });
 
-                if (errors.current_password) {
-                    reset('current_password');
-                    currentPasswordInput.current.focus();
-                }
-            },
-        });
-    };
+            setShouldSubmit(false);
+        }
+    }, [shouldSubmit, data.recaptcha]);
 
     return (
         <section className={className}>
@@ -45,8 +51,15 @@ export default function UpdatePasswordForm({ className = '' }) {
                     Ensure your account is using a long, random password to stay secure.
                 </p>
             </header>
-
-            <form onSubmit={updatePassword} className="mt-6 space-y-6">
+            <Recaptcha
+                recaptchaSiteKey={recaptchaSiteKey}
+                route='profile'
+                setShouldSubmit={setShouldSubmit}
+                className="mt-6 space-y-6"
+                onSubmit={(token) => {
+                    setData('recaptcha', token)
+                }}
+            >
                 <div>
                     <InputLabel htmlFor="current_password" value="Current Password" />
 
@@ -107,7 +120,7 @@ export default function UpdatePasswordForm({ className = '' }) {
                         <p className="text-sm text-gray-600">Saved.</p>
                     </Transition>
                 </div>
-            </form>
+            </Recaptcha>
         </section>
     );
 }

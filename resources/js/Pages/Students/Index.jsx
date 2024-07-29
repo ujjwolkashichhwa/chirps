@@ -7,22 +7,27 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import DraggableSort from '@/Components/DraggableSort';
 import InputField from '@/Components/InputField';
 import SelectField from '@/Components/SelectField';
+import Recaptcha from '@/Components/Recaptcha';
 
-export default function Index({auth, subjects, students}) {
+export default function Index({auth, subjects, students, recaptchaSiteKey }) {
     const { data, setData, post, processing, reset, errors } = useForm({
         studentName: '',
         subjectId: [],
+        recaptcha: ''
     });
 
     const { flash } = usePage().props;
+    const [shouldSubmit, setShouldSubmit] = useState(false);
 
-    const handleSubmit = (e) => {
-        e.preventDefault();
+    useEffect(() => {
+        if(shouldSubmit && data.recaptcha) {
+            post(route('students.store'), {
+                onSuccess: () => reset(),
+            });
 
-        post(route('students.store'), {
-            onSuccess: () => reset(),
-        });
-    };
+            setShouldSubmit(false);
+        }
+    }, [shouldSubmit, data.recaptcha]);
 
     const handleEdit = (student) => {
         Inertia.get(route('student.edit', student));
@@ -73,7 +78,16 @@ export default function Index({auth, subjects, students}) {
             <div className="min-h-screen flex flex-col sm:justify-center items-center pt-6 sm:pt-0 bg-gray-100">
                 <div className="w-full sm:max-w-lg mt-6 px-6 py-4 bg-white shadow-md overflow-hidden sm:rounded-lg">
                     {flash && <div className="mb-4 text-green-600">{flash}</div>}
-                    <form onSubmit={handleSubmit} className="mt-2">
+                    {/* <form onSubmit={handleSubmit} className="mt-2"> */}
+                    <Recaptcha
+                        recaptchaSiteKey={recaptchaSiteKey}
+                        route='students'
+                        setShouldSubmit={setShouldSubmit}
+                        className="mt-2"
+                        onSubmit={(token) => {
+                            setData('recaptcha', token)
+                        }}
+                     >
                         <InputField
                             type="text"
                             value={data.studentName}
@@ -93,7 +107,7 @@ export default function Index({auth, subjects, students}) {
                         <PrimaryButton type="submit" className='mt-2 w-full text-center'  disabled={data.subjectId.length === 0}>
                             Add Student
                         </PrimaryButton>
-                    </form>
+                    </Recaptcha>
                     {
                         (students && students.length>0) && (
                             <table className="min-w-full divide-y divide-gray-200 mt-4">

@@ -123,4 +123,16 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    /*
+     | --------------------------------------------------------------------------
+     | 
+     | --------------------------------------------------------------------------
+     | 
+     | These configration option if for setting the recapta functionality in 
+     | laravel project
+     | 
+     */
+    'recapta_site_key' => env('RECAPTCHA_SITE_KEY', null),
+    'recapta_secret_key' => env('RECAPTCHA_SECRET_KEY', null),
+
 ];

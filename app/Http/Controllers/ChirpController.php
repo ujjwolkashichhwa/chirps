@@ -6,6 +6,7 @@ use App\Models\Chirp;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Http;    
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -17,12 +18,14 @@ class ChirpController extends Controller
     public function index(Request $request): Response
     {
         $user = $request->user();
+        $recaptchaSiteKey = config('app.recapta_site_key');
 
         return Inertia::render('Chirps/Index', [
             'chirps' => Chirp::with('user:id,name')
                 ->where('user_id', $user->id)
                 ->latest()
                 ->get(),
+            'recaptchaSiteKey' => $recaptchaSiteKey
         ]);
     }
     /**
@@ -30,29 +33,40 @@ class ChirpController extends Controller
      */
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'message' => 'required|string|max:255',
-        ]);
+        $recaptchaData = $this->validateRecaptcha($request);
 
-        $request->user()->chirps()->create($validated);
- 
-        return redirect(route('chirps.index'));
+        if (!$recaptchaData['success']) {
+            return back()->withErrors(['recaptcha' => 'reCAPTCHA verification failed.']);
+        } else {
+            $validated = $request->validate([
+                'message' => 'required|string|max:255',
+            ]);
+    
+            $request->user()->chirps()->create($validated);
+     
+            return redirect(route('chirps.index'));
+        }
     }
     /**
      * Update the chirps in storage.
      */
     public function update(Request $request, Chirp $chirp): RedirectResponse
     {
-        // dd($request);
-        Gate::authorize('update', $chirp);
+        $recaptchaData = $this->validateRecaptcha($request);
+
+        if (!$recaptchaData['success']) {
+            return back()->withErrors(['recaptcha' => 'reCAPTCHA verification failed.']);
+        } else {
+            Gate::authorize('update', $chirp);
  
-        $validated = $request->validate([
-            'message' => 'required|string|max:255',
-        ]);
- 
-        $chirp->update($validated);
- 
-        return redirect(route('chirps.index'));
+            $validated = $request->validate([
+                'message' => 'required|string|max:255',
+            ]);
+    
+            $chirp->update($validated);
+    
+            return redirect(route('chirps.index'));
+        }
     }
 
     /**
@@ -60,11 +74,10 @@ class ChirpController extends Controller
      */
     public function destroy(Chirp $chirp): RedirectResponse
     {
-        //
         Gate::authorize('delete', $chirp);
- 
+
         $chirp->delete();
- 
+    
         return redirect(route('chirps.index'));
     }
 
@@ -84,5 +97,19 @@ class ChirpController extends Controller
         }
 
         return redirect()->route('chirps.index');
+    }
+
+    /**
+     * check the validation of recaptcha
+     */
+    private function validateRecaptcha($request) {
+        $recaptchaResponse = Http::asForm()->post('https://www.google.com/recaptcha/api/siteverify', [
+            'secret' => config('app.recapta_secret_key'),
+            'response' => $request->recaptcha,
+        ]);
+
+        $recaptchaData = $recaptchaResponse->json();
+
+        return $recaptchaData;
     }
 }
