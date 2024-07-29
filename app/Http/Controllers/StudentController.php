@@ -6,6 +6,7 @@ use App\Models\Student;
 use App\Models\Subject;
 use App\Http\Requests\StudentRequest;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -31,16 +32,22 @@ class StudentController extends Controller
      */
     public function store(StudentRequest $request)
     {
-        $validated = $request->validated();
+        $recaptchaData = $this->validateRecaptcha($request);
 
-        $student = Student::create([
-            'name' => $validated['studentName'],
-        ]);
+        if (!$recaptchaData['success']) {
+            return back()->withErrors(['recaptcha' => 'reCAPTCHA verification failed.']);
+        } else {
+            $validated = $request->validated();
 
-        $student->subjects()->attach($validated['subjectId']);
-
-        // Redirect or return a response
-        return redirect()->route('students.index')->with('success', 'Student created successfully.');
+            $student = Student::create([
+                'name' => $validated['studentName'],
+            ]);
+    
+            $student->subjects()->attach($validated['subjectId']);
+    
+            // Redirect or return a response
+            return redirect()->route('students.index')->with('success', 'Student created successfully.');
+        }
     }
 
     /**
@@ -70,15 +77,21 @@ class StudentController extends Controller
      */
     public function update(StudentRequest $request, Student $student)
     {
-        $validated = $request->validated();
+        $recaptchaData = $this->validateRecaptcha($request);
 
-        $student->update([
-            'name' => $validated['studentName'],
-        ]);
+        if (!$recaptchaData['success']) {
+            return back()->withErrors(['recaptcha' => 'reCAPTCHA verification failed.']);
+        } else {
+            $validated = $request->validated();
 
-        $student->subjects()->sync($validated['subjectId']);
+            $student->update([
+                'name' => $validated['studentName'],
+            ]);
 
-        return redirect()->route('students.index')->with('success', 'Student updated successfully.');
+            $student->subjects()->sync($validated['subjectId']);
+
+            return redirect()->route('students.index')->with('success', 'Student updated successfully.');
+        }
     }
 
     /**
@@ -106,5 +119,19 @@ class StudentController extends Controller
         }
 
         return redirect()->route('students.index');
+    }
+
+    /**
+     * check the validation of recaptcha
+     */
+    private function validateRecaptcha($request) {
+        $recaptchaResponse = Http::asForm()->post('https://www.google.com/recaptcha/api/siteverify', [
+            'secret' => config('app.recapta_secret_key'),
+            'response' => $request->recaptcha,
+        ]);
+
+        $recaptchaData = $recaptchaResponse->json();
+
+        return $recaptchaData;
     }
 }

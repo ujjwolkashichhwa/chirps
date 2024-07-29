@@ -34,12 +34,7 @@ class RegisteredUserController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
-        $recaptchaResponse = Http::asForm()->post('https://www.google.com/recaptcha/api/siteverify', [
-            'secret' => config('app.recapta_secret_key'),
-            'response' => $request->recaptcha,
-        ]);
-
-        $recaptchaData = $recaptchaResponse->json();
+        $recaptchaData = $this->validateRecaptcha($request);
 
         if (!$recaptchaData['success']) {
             return back()->withErrors(['recaptcha' => 'reCAPTCHA verification failed.']);
@@ -63,5 +58,19 @@ class RegisteredUserController extends Controller
             return redirect(route('dashboard', absolute: false));
         }
         
+    }
+    
+    /**
+     * check the validation of recaptcha
+     */
+    private function validateRecaptcha($request) {
+        $recaptchaResponse = Http::asForm()->post('https://www.google.com/recaptcha/api/siteverify', [
+            'secret' => config('app.recapta_secret_key'),
+            'response' => $request->recaptcha,
+        ]);
+
+        $recaptchaData = $recaptchaResponse->json();
+
+        return $recaptchaData;
     }
 }

@@ -29,7 +29,7 @@ export default function Index({ auth, chirps, recaptchaSiteKey }) {
     }
 
     const renderItem = (chirp) =>( 
-        <Chirp key={chirp.id} chirp={chirp} />
+        <Chirp key={chirp.id} chirp={chirp} recaptchaSiteKey={recaptchaSiteKey}/>
     );
 
     return (

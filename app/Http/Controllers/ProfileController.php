@@ -33,12 +33,7 @@ class ProfileController extends Controller
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
-        $recaptchaResponse = Http::asForm()->post('https://www.google.com/recaptcha/api/siteverify', [
-            'secret' => config('app.recapta_secret_key'),
-            'response' => $request->recaptcha,
-        ]);
-
-        $recaptchaData = $recaptchaResponse->json();
+        $recaptchaData = $this->validateRecaptcha($request);
 
         if (!$recaptchaData['success']) {
             return back()->withErrors(['recaptcha' => 'reCAPTCHA verification failed.']);
@@ -60,12 +55,7 @@ class ProfileController extends Controller
      */
     public function destroy(Request $request): RedirectResponse
     {
-        $recaptchaResponse = Http::asForm()->post('https://www.google.com/recaptcha/api/siteverify', [
-            'secret' => config('app.recapta_secret_key'),
-            'response' => $request->recaptcha,
-        ]);
-
-        $recaptchaData = $recaptchaResponse->json();
+        $recaptchaData = $this->validateRecaptcha($request);
 
         if (!$recaptchaData['success']) {
             return back()->withErrors(['recaptcha' => 'reCAPTCHA verification failed.']);
@@ -85,5 +75,19 @@ class ProfileController extends Controller
     
             return Redirect::to('/');
         }
+    }
+
+    /**
+     * check the validation of recaptcha
+     */
+    private function validateRecaptcha($request) {
+        $recaptchaResponse = Http::asForm()->post('https://www.google.com/recaptcha/api/siteverify', [
+            'secret' => config('app.recapta_secret_key'),
+            'response' => $request->recaptcha,
+        ]);
+
+        $recaptchaData = $recaptchaResponse->json();
+
+        return $recaptchaData;
     }
 }
